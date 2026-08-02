@@ -4,7 +4,43 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Pokédex</title>
-        <link rel="icon" type="image/x-icon" href="" />
+        <link rel="icon" type="image/x-icon" href="./assets/icons/favicon.png" />
+        <link rel="stylesheet" href="./styles/icon.css" />
+        <link rel="stylesheet" href="./styles/img.css" />
+        <link rel="stylesheet" href="./styles/fonts.css" />
+        <link rel="stylesheet" href="./styles/header-footer.css" />
+        <link rel="stylesheet" href="./styles/standard.css" />
+        <link rel="stylesheet" href="style.css" />
+        <script src="./scripts/db.js" defer></script>
+        <script src="./scripts/template.js" defer></script>
+        <script src="script.js" defer></script>
     </head>
-    <body></body>
+    <body>
+        <header>
+            <img src="./assets/icons/pokémon.webp" alt="Logo" />
+            <h1>Pokédex</h1>
+            <section class="search">
+                <input id="search-input" type="text" />
+                <button id="search-button">Search</button>
+            </section>
+        </header>
+        <main id="content">
+            <button id="load-more-button">Load More</button>
+            <section id="pokemon-card">
+                <img id="card-image" src="" alt="Card Image" />
+            </section>
+            <dialog id="dialog">
+                <section id="overlay-dialog-name">
+                    <button id="card"></button>
+                    <img id="dialog-image" src="" alt="Dialog Image" />
+                    <button id="close-dialog-button">close</button>
+                    <div>
+                        <button id="prev-button">preview</button>
+                        <button id="next-button">next</button>
+                    </div>
+                </section>
+            </dialog>
+        </main>
+        <footer id="footer"></footer>
+    </body>
 </html>
