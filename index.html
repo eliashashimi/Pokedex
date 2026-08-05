@@ -15,7 +15,7 @@
         <script src="./scripts/template.js" defer></script>
         <script src="script.js" defer></script>
     </head>
-    <body>
+    <body onload="init()">
         <header>
             <img src="./assets/icons/pokémon.webp" alt="Logo" />
             <h1>Pokédex</h1>
@@ -25,10 +25,10 @@
             </section>
         </header>
         <main id="content">
-            <button id="load-more-button">Load More</button>
             <section id="pokemon-card">
                 <img id="card-image" src="" alt="Card Image" />
             </section>
+            <button id="load-more-button">Load More</button>
             <dialog id="dialog">
                 <section id="overlay-dialog-name">
                     <button id="card"></button>

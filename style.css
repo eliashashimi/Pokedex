@@ -1,0 +1,12 @@
+.content {
+    width: 100%;
+    display: flex;
+}
+
+.pkm-card {
+    height: 200px;
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
