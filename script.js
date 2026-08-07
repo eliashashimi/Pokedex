@@ -52,6 +52,6 @@ function openDialog(index) {
 }
 
 function closeDialog() {
-    dialogPkmCardsRef.clsoe();
+    dialogPkmCardsRef.close();
     dialogPkmCardsRef.classList.remove("active");
 }

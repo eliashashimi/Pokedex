@@ -4,22 +4,22 @@ function renderPkmTypeTemp(onePkm) {
 
 function renderPkmCardTemp(onePkm, pkmBgColor, typesHtml, i) {
     return /*html*/ `
-        <button class="pkm-card" onclick="openDialog(${i})" style="background-color: ${pkmBgColor}">
+        <button id="card${i}" class="pkm-card" onclick="openDialog(${i})" style="background-color: ${pkmBgColor}">
             <div class="pkm-card-nameid">
                 <h3>${onePkm.name}</h3>
                 <p>#${onePkm.id}</p>
             </div>
-            <div>
+            <div class="pkm-types-name">
                 ${typesHtml}
             </div>
-            <img src="${onePkm.sprites.front_shiny}" alt="onePkm.name">
+            <img id="card-image${i}" src="${onePkm.sprites.other["official-artwork"].front_shiny}" alt="onePkm.name">
         </button>
     `;
 }
 
 function openDialogTemp(clickedPkm) {
     return /*html*/ `
-        <section id="dialog-pkm-card" class="dialog-pkm-card">
+        <section id="overlay-dialog-name" class="dialog-overlay-dialog-name">
             <button id="exit-btn"></button>
             <div>
                 <h3>${onePkm.name}</h3>
@@ -28,7 +28,7 @@ function openDialogTemp(clickedPkm) {
             <div>
                 ${typesHtml}
             </div>
-            <img src="${onePkm.sprites.front_shiny}" alt="onePkm.name">
+            <img src="${onePkm.sprites.other[offical - artwork].front_shiny}" alt="onePkm.name">
             </div>
             <div class="dialog-tabs">
                 <button class="tab-btn active" onclick="switchTab('about')">About</button>
@@ -38,6 +38,10 @@ function openDialogTemp(clickedPkm) {
             </div>
             <div class="tab-content-container">
                 ${renderAboutTabTemp(clickedPkm)}
+                <div>
+                    <button id="prev-button">preview</button>
+                    <button id="next-button">next</button>
+                </div>
             </div>
         </section>
     `;

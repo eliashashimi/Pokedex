@@ -18,7 +18,6 @@
     <body onload="init()">
         <header>
             <img src="./assets/icons/pokémon.webp" alt="Logo" />
-            <h1>Pokédex</h1>
             <section class="search">
                 <input id="search-input" type="text" />
                 <button id="search-button">Search</button>
@@ -29,16 +28,7 @@
                 <div id="pokemon-card"></div>
             </section>
             <button id="load-more-button">Load More</button>
-            <dialog id="dialog">
-                <section id="overlay-dialog-name">
-                    <button id="card"></button>
-                    <button id="close-dialog-button">close</button>
-                    <div>
-                        <button id="prev-button">preview</button>
-                        <button id="next-button">next</button>
-                    </div>
-                </section>
-            </dialog>
+            <dialog id="dialog"></dialog>
         </main>
         <footer id="footer"></footer>
     </body>
