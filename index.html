@@ -5,6 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Pokédex</title>
         <link rel="icon" type="image/x-icon" href="./assets/icons/favicon.png" />
+        <link rel="stylesheet" href="./styles/dialog.css" />
         <link rel="stylesheet" href="./styles/icon.css" />
         <link rel="stylesheet" href="./styles/img.css" />
         <link rel="stylesheet" href="./styles/fonts.css" />
@@ -19,16 +20,15 @@
         <header>
             <img src="./assets/icons/pokémon.webp" alt="Logo" />
             <section class="search">
-                <input id="search-input" type="text" />
-                <button id="search-button">Search</button>
+                <input id="search-input" type="text" placeholder="SEARCH NAME OR ID" oninput="checkEmptySearch()"/>
+                <button id="search-button" onclick="inpSearchPkm()">Search</button>
             </section>
         </header>
         <main id="content">
             <section class="pokemon-card-wrapper">
                 <div id="pokemon-card"></div>
-            </section>
             <button id="load-more-button">Load More</button>
-            <dialog id="dialog"></dialog>
+            <dialog id="dialog" onclick="closeDialog()"></dialog>
         </main>
         <footer id="footer"></footer>
     </body>
