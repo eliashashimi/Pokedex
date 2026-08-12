@@ -4,7 +4,7 @@ function renderPkmTypeTemp(type) {
 
 function renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i) {
     return /*html*/ `
-        <button id="card${i}" class="pkm-card" onclick="openDialog(${i}, 'pkmBgColor')" style="background-color: ${pkmBgColor}">
+        <button id="card${i}" class="pkm-card" onclick="openDialog(${i}, '${pkmBgColor}')" style="background-color: ${pkmBgColor}">
             <div class="pkm-card-nameid">
                 <h3>${onePkm.name}</h3>
                 <p>#${onePkm.id}</p>
@@ -17,10 +17,10 @@ function renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i) {
     `;
 }
 
-function openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index) {
+function openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor) {
     return /*html*/ `
-        <section id="overlay-dialog-name" class="overlay-dialog-name" onclick="event.stopPropagation()">
-            <button id="exit-btn"></button>
+        <section id="overlay-dialog-name" class="overlay-dialog-name" onclick="event.stopPropagation()" style="background-color: ${pkmBgColor}">
+            <button id="exit-btn"  onclick="closeDialog()"><img src="./assets/icons/arrow-left.svg" alt=""></button>
             <div>
                 <h3>${clickedPkm.name}</h3>
                 <p>#${clickedPkm.id}</p>
@@ -32,18 +32,18 @@ function openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index) {
             <img src="${clickedPkm.sprites.other["official-artwork"].front_shiny}" alt="onePkm.name">
             </div>
             <div class="dialog-tabs">
-                <button class="tab-btn active" onclick="switchTab('about')">About</button>
-                <button class="tab-btn" onclick="switchTab('stats')">Base Stats</button>
-                <button class="tab-btn" onclick="switchTab('gender')">Gender</button>
-                <button class="tab-btn" onclick="switchTab('shiny')">Shiny</button>
+                <button id="tab-about" class="tab-btn active" onclick="switchTab('about', ${index})">About</button>
+                <button id="tab-stats" class="tab-btn" onclick="switchTab('stats', ${index})">Base Stats</button>
+                <button id="tab-evolution" class="tab-btn" onclick="switchTab('evolution', ${index})">Evolution</button>
+                <button id="tab-shiny" class="tab-btn" onclick="switchTab('shiny', ${index})">Shiny</button>
             </div>
             <div class="tab-content-container" id="tab-content">
                 ${renderAboutTabTemp(clickedPkm, genusText)}
-                <div>
-                    <button class= id="prev-button" onclick="changeDialogPkm((${index}), 'prev')">prev</button>
-                    <button id="next-button" onclick="changeDialogPkm((${index}), 'next')">next</button>
-                </div>
             </div>
+            <div>
+                <button class="prev btn" id="prev-button" onclick="changeDialogPkm(${index}, 'prev')">prev</button>
+                <button class="next btn" id="next-button" onclick="changeDialogPkm(${index}, 'next')">next</button>
+            </div>            
         </section>
     `;
 }
@@ -69,11 +69,37 @@ function renderAboutTabTemp(onePkm, genusText) {
     `;
 }
 
-function renderStatsTemp() {
+function renderStatsTemp(statsRowsHtml) {
+    return /*html*/ `
+        <div class="tab-category">
+            ${statsRowsHtml}
+        </div>
+    `;
+}
+
+function renderSingleStatsRowTemp(statName, baseStat) {
     return /*html*/ `
         <div class="stats-row">
-            <span class="stats-name">${s.stat.name.toUpperCase()}:</span>
-            <span class="stats-value">${s.base_stat}</span>
+            <span class="stats-name">${statName.toUpperCase()}:</span>
+            <span class="stats-value">${baseStat}</span>
+        </div>
+    `;
+}
+
+function renderEvoTemp(evoHtml) {
+    return /*html*/ `
+        <div class="tab-category">
+            <div class="evolution-list">
+                ${evoHtml}
+            </div>
+        </div>
+    `;
+}
+
+function renderEvoRowTemp(evoName) {
+    return /*html*/ `
+        <div class="evo-row">
+            <span class="evo-pkm-name">${evoName.toUpperCase()}</span>
         </div>
     `;
 }

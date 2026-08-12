@@ -2,29 +2,36 @@ const baseUrl = "https://pokeapi.co/api/v2/";
 
 let pkmArray = [];
 let allPkm = [];
+let searchedDialogList = [];
+const loadMorePkm = 6;
+let saveMorePkm = 0;
 
 const dialogPkmCardsRef = document.getElementById("dialog");
 const pkmCardsRef = document.getElementById("pokemon-card");
 
-function init() {
+async function init() {
+    await loadDataApi();
     renderPkmCards();
 }
 
-// Daten aus der API laden mit rückgabewert, keine Ausführende Funktion
-async function loadDataApi() {
-    if (pkmArray.length > 0) return pkmArray;
+function resetSearchList() {
+    searchedDialogList = [];
+}
 
-    for (let id = 1; id <= 6; id++) {
+async function loadDataApi() {
+    let start = saveMorePkm + 1;
+    let end = loadMorePkm + saveMorePkm;
+    for (let id = start; id <= end; id++) {
         let response = await fetch(baseUrl + "pokemon/" + `${id}`);
         let responseSpecies = await fetch(baseUrl + "pokemon-species/" + `${id}`);
-        let responseEvo = await fetch(baseUrl + "evolution-chain/" + `${id}`);
+
         let pkmJson = await response.json();
         let pkmJsonSpecies = await responseSpecies.json();
-        let pkmJsonEvo = await responseEvo.json();
 
-        pkmArray.push(pkmJson, pkmJsonSpecies, pkmJsonEvo);
+        pkmArray.push(pkmJson, pkmJsonSpecies);
         renderSpecies(pkmJsonSpecies);
     }
+    saveMorePkm += loadMorePkm;
     return pkmArray;
 }
 
@@ -52,11 +59,14 @@ function filterPkm(list, searchVal) {
 async function inpSearchPkm() {
     const searchVal = document.getElementById("search-input").value.toLowerCase().trim();
 
-    if (searchVal === "") return renderPkmCards();
-
+    if (searchVal === "") {
+        resetSearchList();
+        return renderPkmCards();
+    }
     const isNumber = !isNaN(searchVal);
 
     if (!isNumber && searchVal.length < 3) return;
+    resetSearchList();
     const fullList = await fetchAllPkm();
     const foundPkm = filterPkm(fullList, searchVal);
 
@@ -67,6 +77,7 @@ function checkEmptySearch() {
     const searchVal = document.getElementById("search-input").value.trim();
 
     if (searchVal === "") {
+        resetSearchList();
         renderPkmCards();
     }
 }
@@ -87,7 +98,8 @@ function getGlobaleIndex(onePkm) {
 async function loadSearchDetails(foundPkm) {
     pkmCardsRef.innerHTML = "";
 
-    for (let pkm of foundPkm) {
+    for (let i = 0; i < foundPkm.length; i++) {
+        let pkm = foundPkm[i];
         const urlParts = pkm.url.split("/");
         const pkmId = urlParts[urlParts.length - 2];
         let detailResponse = await fetch(baseUrl + "pokemon/" + pkmId);
@@ -96,9 +108,9 @@ async function loadSearchDetails(foundPkm) {
         const pkmType = onePkm.types[0].type.name;
         const pkmBgColor = typeColors[pkmType] || "#777";
         let pkmtypes = getSearchPkmTypesHtml(onePkm);
-        let globalIndex = getGlobaleIndex(onePkm);
 
-        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, globalIndex);
+        searchedDialogList.push(onePkm);
+        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i);
     }
 }
 
@@ -112,9 +124,8 @@ function renderSpecies(pkmJsonSpecies) {
 
 async function renderPkmCards() {
     pkmCardsRef.innerHTML = "";
-    await loadDataApi();
 
-    for (let i = 0; i < pkmArray.length; i += 3) {
+    for (let i = 0; i < pkmArray.length; i += 2) {
         let onePkm = pkmArray[i];
         const pkmType = onePkm.types[0].type.name;
         const pkmBgColor = typeColors[pkmType] || "#777";
@@ -125,14 +136,19 @@ async function renderPkmCards() {
         }
         pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i);
     }
+    searchedDialogList = pkmArray;
+}
+
+async function loadMorePkmBtn() {
+    await loadDataApi();
+    renderPkmCards();
 }
 
 function prepDialogData(index) {
-    let clickedPkm = pkmArray[index];
-    let clickedSpecies = pkmArray[index + 1];
-    let clickedEvo = pkmArray[index + 2];
+    let clickedPkm = searchedDialogList[index];
+    let clickedSpecies = searchedDialogList === pkmArray ? searchedDialogList[index + 1] : null;
     let pkmTypesHtml = getPokemonTypesHtml(clickedPkm);
-    let genusText = getEngGenus(clickedSpecies);
+    let genusText = clickedSpecies ? getEngGenus(clickedSpecies) : "Unknown";
 
     return { clickedPkm, pkmTypesHtml, genusText };
 }
@@ -154,11 +170,64 @@ function getEngGenus(species) {
     return "Unknown";
 }
 
-function openDialog(index) {
-    dialogPkmCardsRef.innerHTML = "";
+function getPokemonStatsHtml(clickedPkm) {
+    let statsRowsHtml = "";
 
+    for (let i = 0; i < clickedPkm.stats.length; i++) {
+        let s = clickedPkm.stats[i];
+        statsRowsHtml += renderSingleStatsRowTemp(s.stat.name, s.base_stat);
+    }
+    return renderStatsTemp(statsRowsHtml);
+}
+
+async function fetchEvoChain(clickedPkm) {
+    const speciesUrl = clickedPkm.species.url;
+
+    let speciesResponse = await fetch(speciesUrl);
+    let speciesJson = await speciesResponse.json();
+    let evoResponse = await fetch(speciesJson.evolution_chain.url);
+    let evoJson = await evoResponse.json();
+    return evoJson.chain;
+}
+
+async function fetchEvoImages(evoNameList) {
+    for (let i = 0; i < evoNameList.length; i++) {
+        let name = evoNameList[i];
+        let response = await fetch(baseUrl + "pokemon/" + name);
+        let pkmJson = await response.json();
+
+        evoDataList.push({
+            name: name,
+            image: pkmJson.sprites.other["official-artwork"].front - shiny,
+        });
+    }
+    return evoDataList;
+}
+
+async function getPkmEvoHtml(clickedPkm) {
+    let evoHtml = "";
+    let evoStep = await fetchEvoChain(clickedPkm);
+
+    let p1 = evoStep ? evoStep.species.name : null;
+    let p2 = evoStep?.evolves_to?.[0] ? evoStep.evolves_to[0].species.name : null;
+    let p3 = evoStep?.evolves_to?.[0]?.evolves_to?.[0] ? evoStep.evolves_to[0].evolves_to[0].species.name : null;
+
+    let evoNameList = [p1, p2, p3].filter((name) => name != null);
+    for (let i = 0; i < evoNameList.length; i++) {
+        evoHtml += renderEvoRowTemp(evoNameList[i]);
+    }
+    return renderEvoTemp(evoHtml);
+}
+
+function openDialog(index, pkmBgColor) {
+    dialogPkmCardsRef.innerHTML = "";
     const { clickedPkm, pkmTypesHtml, genusText } = prepDialogData(index);
-    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index);
+
+    if (!pkmBgColor) {
+        const pkmType = clickedPkm.types[0].type.name;
+        pkmBgColor = typeColors[pkmType] || "#777";
+    }
+    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor);
 
     dialogPkmCardsRef.showModal();
     dialogPkmCardsRef.classList.add("active");
@@ -171,13 +240,46 @@ function closeDialog() {
 
 function changeDialogPkm(currentIndex, direction) {
     let newIndex = currentIndex;
+    let step = searchedDialogList === pkmArray ? 2 : 1;
 
     if (direction === "next") {
-        newIndex += 3;
+        newIndex += step;
     } else if (direction === "prev") {
-        newIndex -= 3;
+        newIndex -= step;
     }
-    if (newIndex >= 0 && newIndex < pkmArray.length) {
-        openDialog(newIndex);
+
+    if (newIndex < 0) {
+        newIndex = searchedDialogList.length - step;
+    } else if (newIndex >= searchedDialogList.length) {
+        newIndex = 0;
+    }
+    openDialog(newIndex);
+}
+
+function updateActiveBtn(tabName) {
+    const button = document.querySelectorAll(".tab-btn");
+    for (let btn of button) {
+        btn.classList.remove("active");
+    }
+    const activeBtn = document.getElementById("tab-" + tabName);
+    if (activeBtn) activeBtn.classList.add("active");
+}
+
+async function switchTab(tabName, index) {
+    updateActiveBtn(tabName);
+
+    const tabContentRef = document.getElementById("tab-content");
+    let clickedPkm = searchedDialogList[index];
+
+    if (tabName === "about") {
+        let clickedSpecies = searchedDialogList === pkmArray ? searchedDialogList[index + 1] : null;
+        let genusText = clickedSpecies ? getEngGenus(clickedSpecies) : "Unknown";
+        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText);
+    } else if (tabName === "stats") {
+        tabContentRef.innerHTML = getPokemonStatsHtml(clickedPkm);
+    } else if (tabName === "evolution") {
+        tabContentRef.innerHTML = await getPkmEvoHtml(clickedPkm);
+    } else if (tabName === "shiny") {
+        tabContentRef.innerHTML = "";
     }
 }
