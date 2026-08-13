@@ -1,23 +1,41 @@
-header {
+body {
     width: 100%;
-
     display: flex;
-    align-items: end;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .content {
     width: 100%;
     max-width: 1440px;
-    /* display: flex; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+header {
+    width: 100%;
+    max-width: 1440px;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+}
+
+.pokemon-card-wrapper {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
 }
 
 .pokemon-card {
-    height: 100dvh;
     width: 100%;
-    /* display: flex; */
-    /* flex-wrap: wrap; */
-    justify-content: space-around;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
 }
 
 .pkm-card {
@@ -29,4 +47,19 @@ header {
     img {
         width: 150px;
     }
+}
+
+.pkm-card-nameid {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    padding: 0px 10%;
+    margin-bottom: 40px;
+}
+
+.pkm-types-name {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 10px;
 }

@@ -2,8 +2,10 @@ const baseUrl = "https://pokeapi.co/api/v2/";
 
 let pkmArray = [];
 let allPkm = [];
+let evoDataList = [];
 let searchedDialogList = [];
-const loadMorePkm = 6;
+let abilities = [];
+const loadMorePkm = 9;
 let saveMorePkm = 0;
 
 const dialogPkmCardsRef = document.getElementById("dialog");
@@ -24,7 +26,6 @@ async function loadDataApi() {
     for (let id = start; id <= end; id++) {
         let response = await fetch(baseUrl + "pokemon/" + `${id}`);
         let responseSpecies = await fetch(baseUrl + "pokemon-species/" + `${id}`);
-
         let pkmJson = await response.json();
         let pkmJsonSpecies = await responseSpecies.json();
 
@@ -144,13 +145,24 @@ async function loadMorePkmBtn() {
     renderPkmCards();
 }
 
+function getPkmAbilitiesHtml(pkm) {
+    for (let i = 0; i < pkm.abilities.length; i++) {
+        abilities.push(pkm.abilities[i].ability.name);
+    }
+    return abilities.join(", "); // Warum steht das so mit join, was macht das join?
+}
+
 function prepDialogData(index) {
     let clickedPkm = searchedDialogList[index];
     let clickedSpecies = searchedDialogList === pkmArray ? searchedDialogList[index + 1] : null;
     let pkmTypesHtml = getPokemonTypesHtml(clickedPkm);
     let genusText = clickedSpecies ? getEngGenus(clickedSpecies) : "Unknown";
 
-    return { clickedPkm, pkmTypesHtml, genusText };
+    let abilitiesHtml = getPkmAbilitiesHtml(clickedPkm);
+    let catchRate = clickedSpecies ? clickedSpecies.cpature_rate : "Unknown";
+    let baseExp = clickedPkm.base_experience || "Unknown";
+
+    return { clickedPkm, pkmTypesHtml, genusText, abilities, catchRate, baseExp };
 }
 
 function getPokemonTypesHtml(pokemon) {
@@ -175,7 +187,8 @@ function getPokemonStatsHtml(clickedPkm) {
 
     for (let i = 0; i < clickedPkm.stats.length; i++) {
         let s = clickedPkm.stats[i];
-        statsRowsHtml += renderSingleStatsRowTemp(s.stat.name, s.base_stat);
+        let percent = (s.base_stat / 255) * 100;
+        statsRowsHtml += renderSingleStatsRowTemp(s.stat.name, s.base_stat, percent);
     }
     return renderStatsTemp(statsRowsHtml);
 }
@@ -191,6 +204,7 @@ async function fetchEvoChain(clickedPkm) {
 }
 
 async function fetchEvoImages(evoNameList) {
+    evoDataList = [];
     for (let i = 0; i < evoNameList.length; i++) {
         let name = evoNameList[i];
         let response = await fetch(baseUrl + "pokemon/" + name);
@@ -198,7 +212,7 @@ async function fetchEvoImages(evoNameList) {
 
         evoDataList.push({
             name: name,
-            image: pkmJson.sprites.other["official-artwork"].front - shiny,
+            image: pkmJson.sprites.other["official-artwork"]["front_shiny"],
         });
     }
     return evoDataList;
@@ -213,21 +227,23 @@ async function getPkmEvoHtml(clickedPkm) {
     let p3 = evoStep?.evolves_to?.[0]?.evolves_to?.[0] ? evoStep.evolves_to[0].evolves_to[0].species.name : null;
 
     let evoNameList = [p1, p2, p3].filter((name) => name != null);
-    for (let i = 0; i < evoNameList.length; i++) {
-        evoHtml += renderEvoRowTemp(evoNameList[i]);
+    let evoObjectList = await fetchEvoImages(evoNameList);
+    for (let i = 0; i < evoObjectList.length; i++) {
+        let pkm = evoObjectList[i];
+        evoHtml += renderEvoRowTemp(pkm.name, pkm.image);
     }
     return renderEvoTemp(evoHtml);
 }
 
 function openDialog(index, pkmBgColor) {
     dialogPkmCardsRef.innerHTML = "";
-    const { clickedPkm, pkmTypesHtml, genusText } = prepDialogData(index);
+    const { clickedPkm, pkmTypesHtml, genusText, abilitiesHtml, catchRate, baseExp } = prepDialogData(index);
 
     if (!pkmBgColor) {
         const pkmType = clickedPkm.types[0].type.name;
         pkmBgColor = typeColors[pkmType] || "#777";
     }
-    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor);
+    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, abilitiesHtml, catchRate, baseExp);
 
     dialogPkmCardsRef.showModal();
     dialogPkmCardsRef.classList.add("active");
@@ -267,19 +283,16 @@ function updateActiveBtn(tabName) {
 
 async function switchTab(tabName, index) {
     updateActiveBtn(tabName);
-
     const tabContentRef = document.getElementById("tab-content");
     let clickedPkm = searchedDialogList[index];
-
+    const { genusText, abilitiesHtml, catchRate, baseExp } = prepDialogData(index);
     if (tabName === "about") {
-        let clickedSpecies = searchedDialogList === pkmArray ? searchedDialogList[index + 1] : null;
-        let genusText = clickedSpecies ? getEngGenus(clickedSpecies) : "Unknown";
-        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText);
+        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText, abilitiesHtml, catchRate, baseExp);
     } else if (tabName === "stats") {
         tabContentRef.innerHTML = getPokemonStatsHtml(clickedPkm);
     } else if (tabName === "evolution") {
         tabContentRef.innerHTML = await getPkmEvoHtml(clickedPkm);
     } else if (tabName === "shiny") {
-        tabContentRef.innerHTML = "";
+        tabContentRef.innerHTML = renderShinyTabTemp(clickedPkm);
     }
 }
