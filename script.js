@@ -5,7 +5,7 @@ let allPkm = [];
 let evoDataList = [];
 let searchedDialogList = [];
 let abilities = [];
-const loadMorePkm = 9;
+const loadMorePkm = 20;
 let saveMorePkm = 0;
 
 const dialogPkmCardsRef = document.getElementById("dialog");
@@ -83,14 +83,6 @@ function checkEmptySearch() {
     }
 }
 
-function getSearchPkmTypesHtml(onePkm) {
-    let pkmtypes = "";
-    for (let j = 0; j < onePkm.types.length; j++) {
-        pkmtypes += renderPkmTypeTemp(onePkm.types[j].type);
-    }
-    return pkmtypes;
-}
-
 function getGlobaleIndex(onePkm) {
     let IndexResult = pkmArray.findIndex((p) => p && p.id === onePkm.id);
     return IndexResult !== -1 ? IndexResult : 0;
@@ -98,20 +90,18 @@ function getGlobaleIndex(onePkm) {
 
 async function loadSearchDetails(foundPkm) {
     pkmCardsRef.innerHTML = "";
-
     for (let i = 0; i < foundPkm.length; i++) {
         let pkm = foundPkm[i];
         const urlParts = pkm.url.split("/");
         const pkmId = urlParts[urlParts.length - 2];
         let detailResponse = await fetch(baseUrl + "pokemon/" + pkmId);
         let onePkm = await detailResponse.json();
-
         const pkmType = onePkm.types[0].type.name;
         const pkmBgColor = typeColors[pkmType] || "#777";
-        let pkmtypes = getSearchPkmTypesHtml(onePkm);
-
+        let pkmtypes = getCardTypesHtml(onePkm);
+        let pkmIcons = getPkmIconsHtml(onePkm);
         searchedDialogList.push(onePkm);
-        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i);
+        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i, pkmIcons);
     }
 }
 
@@ -123,19 +113,36 @@ function renderSpecies(pkmJsonSpecies) {
     }
 }
 
+function getPkmIconsHtml(pokemon) {
+    let iconsHtml = "";
+    for (let j = 0; j < pokemon.types.length; j++) {
+        let t = pokemon.types[j].type;
+        let iconUrl = `https://raw.githubusercontent.com/partywhale/pokemon-type-icons/refs/heads/main/icons/${t.name}.svg`;
+
+        iconsHtml += renderPkmIconTemp(t.name, iconUrl);
+    }
+    return iconsHtml;
+}
+
+function getCardTypesHtml(onePkm) {
+    let pkmTypes = "";
+    for (let j = 0; j < onePkm.types.length; j++) {
+        let currentType = onePkm.types[j].type;
+        let currentTypeColor = typeColors[currentType.name] || "#777";
+        pkmTypes += renderPkmTypeTemp(currentType, currentTypeColor);
+    }
+    return pkmTypes;
+}
+
 async function renderPkmCards() {
     pkmCardsRef.innerHTML = "";
-
     for (let i = 0; i < pkmArray.length; i += 2) {
         let onePkm = pkmArray[i];
         const pkmType = onePkm.types[0].type.name;
         const pkmBgColor = typeColors[pkmType] || "#777";
-
-        let pkmtypes = "";
-        for (let j = 0; j < onePkm.types.length; j++) {
-            pkmtypes += renderPkmTypeTemp(onePkm.types[j].type);
-        }
-        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i);
+        let pkmTypes = getCardTypesHtml(onePkm);
+        let pkmIcons = getPkmIconsHtml(onePkm);
+        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmTypes, i, pkmIcons);
     }
     searchedDialogList = pkmArray;
 }
@@ -146,10 +153,11 @@ async function loadMorePkmBtn() {
 }
 
 function getPkmAbilitiesHtml(pkm) {
+    abilities = [];
     for (let i = 0; i < pkm.abilities.length; i++) {
         abilities.push(pkm.abilities[i].ability.name);
     }
-    return abilities.join(", "); // Warum steht das so mit join, was macht das join?
+    return abilities.join(", ");
 }
 
 function prepDialogData(index) {
@@ -162,7 +170,7 @@ function prepDialogData(index) {
     let catchRate = clickedSpecies ? clickedSpecies.cpature_rate : "Unknown";
     let baseExp = clickedPkm.base_experience || "Unknown";
 
-    return { clickedPkm, pkmTypesHtml, genusText, abilities, catchRate, baseExp };
+    return { clickedPkm, pkmTypesHtml, genusText, abilitiesHtml, catchRate, baseExp };
 }
 
 function getPokemonTypesHtml(pokemon) {
@@ -243,7 +251,7 @@ function openDialog(index, pkmBgColor) {
         const pkmType = clickedPkm.types[0].type.name;
         pkmBgColor = typeColors[pkmType] || "#777";
     }
-    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, abilitiesHtml, catchRate, baseExp);
+    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, abilities, catchRate, baseExp);
 
     dialogPkmCardsRef.showModal();
     dialogPkmCardsRef.classList.add("active");
@@ -285,9 +293,9 @@ async function switchTab(tabName, index) {
     updateActiveBtn(tabName);
     const tabContentRef = document.getElementById("tab-content");
     let clickedPkm = searchedDialogList[index];
-    const { genusText, abilitiesHtml, catchRate, baseExp } = prepDialogData(index);
+    const { genusText, abilities, catchRate, baseExp } = prepDialogData(index);
     if (tabName === "about") {
-        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText, abilitiesHtml, catchRate, baseExp);
+        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText, abilities, catchRate, baseExp);
     } else if (tabName === "stats") {
         tabContentRef.innerHTML = getPokemonStatsHtml(clickedPkm);
     } else if (tabName === "evolution") {

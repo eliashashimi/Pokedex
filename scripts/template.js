@@ -1,8 +1,12 @@
-function renderPkmTypeTemp(type) {
-    return `<span class="type-badge ${type.name}">${type.name}</span>`;
+function renderPkmTypeTemp(type, pkmBgColor) {
+    return /*html*/ `<span class="type-badge ${type.name}" style="background-color: ${pkmBgColor}">${type.name}</span>`;
 }
 
-function renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i) {
+function renderPkmIconTemp(typeName, iconUrl) {
+    return /*html*/ `<img class="type-icon-img" src="${iconUrl}" alt="${typeName} icon">`;
+}
+
+function renderPkmCardTemp(onePkm, pkmBgColor, pkmTypes, i, pkmIcons) {
     return /*html*/ `
         <button id="card${i}" class="pkm-card" onclick="openDialog(${i}, '${pkmBgColor}')" style="background-color: ${pkmBgColor}">
             <div class="pkm-card-nameid">
@@ -10,9 +14,12 @@ function renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i) {
                 <p>#${onePkm.id}</p>
             </div>
             <div class="pkm-types-name">
-                ${pkmtypes.toUpperCase()}
+                ${pkmTypes.toUpperCase()}
             </div>
             <img id="card-image${i}" src="${onePkm.sprites.other["official-artwork"].front_shiny}" alt="onePkm.name">
+            <div class="card-type-icons">
+                ${pkmIcons}
+            </div>
         </button>
     `;
 }
@@ -114,7 +121,7 @@ function renderEvoTemp(evoHtml) {
 function renderEvoRowTemp(evoName, evoImage) {
     return /*html*/ `
         <div class="evo-row">
-            <img class="evo-dialog-img" class="evo-pkm-img" src="${evoImage}" alt="${evoName}">
+            <img class="evo-dialog-img" src="${evoImage}" alt="${evoName}">
             <span class="evo-pkm-name">${evoName.toUpperCase()}</span>
         </div>
     `;

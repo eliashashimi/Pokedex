@@ -1,0 +1,14 @@
+.card-type-icons {
+    display: flex;
+    justify-content: flex-start;
+    gap: 6px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.type-icon-img {
+    width: 24px !important;
+    height: 24px !important;
+    object-fit: contain;
+    filter: drop-shadow(0px 2px 3px rgba(0, 0, 0, 0.6));
+}
