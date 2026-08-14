@@ -2,56 +2,293 @@ dialog {
     border: none;
     border-radius: 24px;
     background: transparent;
+    margin: auto;
+    overflow: visible;
     align-self: center;
     justify-self: center;
 }
 
 dialog::backdrop {
-    backdrop-filter: blur(5px);
-    background-color: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+#exit-btn {
+    background: rgba(0, 0, 0, 0.3);
+    border: none;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+#exit-btn:hover {
+    background: rgba(255, 0, 0, 0.6);
+    transform: scale(1.1);
+}
+
+.dialog-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    width: 100%;
+    h3,
+    p {
+        font-size: 32px;
+        font-weight: 700;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.75);
+        letter-spacing: 0.5px;
+        font-family: monospace;
+    }
+}
+
+.pkm-types {
+    display: flex;
+    align-self: center;
+    justify-self: center;
+    gap: 20px;
+    height: 15px;
+    width: 60px;
+    color: antiquewhite;
+    border-color: black;
+    border-radius: 20px;
 }
 
 .overlay-dialog-name {
     height: fit-content;
-    border-radius: 24px;
-    padding: 24px;
+    width: 560px;
+    border-radius: 28px;
+    padding: 32px;
+    color: white;
+    box-sizing: border-box;
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+    position: relative;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .dialog-img {
-    width: 400px;
+    width: 200px;
+    height: 200px;
+    display: block;
+    margin: 10px auto;
+    object-fit: contain;
+    filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.4));
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 6px 12px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn:hover,
+.tab-btn.active {
+    color: white;
+    text-shadow: 0 0 10px #ffe600;
+}
+
+.tab-content-container {
+    background: rgba(0, 0, 0, 0.35);
+    border-radius: 20px;
+    padding: 24px;
+    min-height: 280px;
 }
 
 .dialog-tabs {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 8px;
+}
+
+.tab-category table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tab-category th {
+    text-align: left;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: bold;
+    padding: 10px 0;
+    width: 35%;
+}
+
+.tab-category td {
+    color: white;
+    padding: 10px 0;
+    font-weight: 500;
 }
 
 .stats-row {
     display: flex;
     align-items: center;
-    margin-bottom: 8px;
+    margin: 10px 0px;
     gap: 15px;
 }
 
 .stats-name {
-    width: 80px;
+    width: 90px;
     text-transform: uppercase;
     font-weight: bold;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.9);
 }
 
 .stats-value {
     width: 35px;
     text-align: right;
+    font-weight: bold;
 }
 
 .stat-bar-bg {
-    height: 10px;
-    background-color: #e0e0e0;
+    height: 8px;
+    background-color: rgba(255, 255, 255, 0.2);
     flex: 1;
-    border-radius: 5px;
+    border-radius: 4px;
     overflow: hidden;
 }
 
 .stat-bar-fill {
     height: 100%;
     background-color: #4caf50;
-    border-radius: 5px;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #4caf50;
+}
+
+.evolution-list {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    padding-top: 50px;
+}
+
+.evo-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 25px;
+    position: relative;
+}
+
+.evo-dialog-img {
+    width: 75px;
+    height: 75px;
+    object-fit: contain;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    padding: 5px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.evo-dialog-img:hover {
+    transform: scale(1.9);
+}
+
+.evo-pkm-name {
+    font-size: 11px;
+    font-weight: bold;
+    color: rgba(255, 255, 255, 0.8);
+    text-align: center;
+}
+
+.evo-row:not(:last-child) {
+    margin-right: 55px;
+}
+
+.evo-row:not(:last-child)::after {
+    content: "➔";
+    position: absolute;
+    right: -48px;
+    top: 25px;
+    font-size: 26px;
+    color: #ffe600;
+    text-shadow: 0 0 10px #ffe600;
+}
+
+.dialog-navigation {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 24px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.prev.btn,
+.next.btn {
+    background: rgba(18, 18, 37, 0.6);
+    color: #ffffff;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    padding: 12px 28px;
+    font-size: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 24px;
+    cursor: pointer;
+    backdrop-filter: blur(5px);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.prev.btn {
+    border-color: rgba(0, 150, 255, 0.4);
+}
+
+.prev.btn:hover {
+    background: #0066ff;
+    border-color: #00bfff;
+    box-shadow:
+        0 0 10px #0066ff,
+        0 0 25px rgba(0, 191, 255, 0.6);
+    transform: translateX(-5px);
+}
+
+.next.btn {
+    border-color: rgba(255, 140, 0, 0.4);
+}
+
+.next.btn:hover {
+    background: #ff8c00;
+    border-color: #ffaa00;
+    box-shadow:
+        0 0 10px #ff8c00,
+        0 0 25px rgba(255, 170, 0, 0.6);
+    transform: translateX(5px);
+}
+
+.prev.btn:active,
+.next.btn:active {
+    transform: scale(0.95);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+.tab-category.shiny {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-top: 50px;
+    img {
+        width: 100px;
+    }
 }

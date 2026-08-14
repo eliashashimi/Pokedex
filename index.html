@@ -11,6 +11,7 @@
         <link rel="stylesheet" href="./styles/fonts.css" />
         <link rel="stylesheet" href="./styles/header-footer.css" />
         <link rel="stylesheet" href="./styles/standard.css" />
+        <link rel="stylesheet" href="./styles/load-spinner.css">
         <link rel="stylesheet" href="./styles/background Pokedex.css">
         <link rel="stylesheet" href="style.css" />
         <script src="./scripts/db.js" defer></script>
@@ -26,11 +27,18 @@
             </section>
         </header>
         <main id="content" class="content">
+            <section id="loading-spinner" class="loading-spinner">
+                <div class="pokeball-spinner"></div>
+                <p>Lade Pokémon...</p>
+            </section>
             <section class="pokemon-card-wrapper">
                 <div id="pokemon-card" class="pokemon-card"></div>
             <button id="load-more-button" onclick="loadMorePkmBtn()">Load More</button>
             <dialog id="dialog" onclick="closeDialog()"></dialog>
         </main>
-        <footer id="footer"></footer>
+        <footer class="footer">
+            <p>&copy; 2026 M. Elias Hashimi    | </p>
+            <a href="https://github.com/eliashashimi" target="_blank">GitHub Profil</a>
+    </footer>
     </body>
 </html>

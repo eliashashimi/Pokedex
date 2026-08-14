@@ -1,18 +1,19 @@
 const baseUrl = "https://pokeapi.co/api/v2/";
-
+const dialogPkmCardsRef = document.getElementById("dialog");
+const pkmCardsRef = document.getElementById("pokemon-card");
+const loadMorePkm = 20;
 let pkmArray = [];
 let allPkm = [];
 let evoDataList = [];
 let searchedDialogList = [];
 let abilities = [];
-const loadMorePkm = 20;
 let saveMorePkm = 0;
 
-const dialogPkmCardsRef = document.getElementById("dialog");
-const pkmCardsRef = document.getElementById("pokemon-card");
-
 async function init() {
+    const spinner = document.getElementById("loading-spinner");
+    if (spinner) spinner.classList.remove("d_none");
     await loadDataApi();
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     renderPkmCards();
 }
 
@@ -28,7 +29,6 @@ async function loadDataApi() {
         let responseSpecies = await fetch(baseUrl + "pokemon-species/" + `${id}`);
         let pkmJson = await response.json();
         let pkmJsonSpecies = await responseSpecies.json();
-
         pkmArray.push(pkmJson, pkmJsonSpecies);
         renderSpecies(pkmJsonSpecies);
     }
@@ -48,35 +48,29 @@ async function fetchAllPkm() {
 function filterPkm(list, searchVal) {
     return list.filter((pkm) => {
         const matchesName = pkm.name.toLowerCase().includes(searchVal);
-
         const urlParts = pkm.url.split("/");
         const pkmId = urlParts[urlParts.length - 2];
         const matchesId = pkmId === searchVal;
-
         return matchesName || matchesId;
     });
 }
 
 async function inpSearchPkm() {
     const searchVal = document.getElementById("search-input").value.toLowerCase().trim();
-
     if (searchVal === "") {
         resetSearchList();
         return renderPkmCards();
     }
     const isNumber = !isNaN(searchVal);
-
     if (!isNumber && searchVal.length < 3) return;
     resetSearchList();
     const fullList = await fetchAllPkm();
     const foundPkm = filterPkm(fullList, searchVal);
-
     loadSearchDetails(foundPkm);
 }
 
 function checkEmptySearch() {
     const searchVal = document.getElementById("search-input").value.trim();
-
     if (searchVal === "") {
         resetSearchList();
         renderPkmCards();
@@ -107,7 +101,6 @@ async function loadSearchDetails(foundPkm) {
 
 function renderSpecies(pkmJsonSpecies) {
     const result = pkmJsonSpecies.genera.filter((item) => item.language.name === "en");
-
     if (result) {
         return result.genus;
     }
@@ -118,7 +111,6 @@ function getPkmIconsHtml(pokemon) {
     for (let j = 0; j < pokemon.types.length; j++) {
         let t = pokemon.types[j].type;
         let iconUrl = `https://raw.githubusercontent.com/partywhale/pokemon-type-icons/refs/heads/main/icons/${t.name}.svg`;
-
         iconsHtml += renderPkmIconTemp(t.name, iconUrl);
     }
     return iconsHtml;
@@ -145,9 +137,13 @@ async function renderPkmCards() {
         pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmTypes, i, pkmIcons);
     }
     searchedDialogList = pkmArray;
+    const spinner = document.getElementById("loading-spinner");
+    if (spinner) spinner.classList.remove("d_none");
 }
 
 async function loadMorePkmBtn() {
+    const spinner = document.getElementById("loading-spinner");
+    if (spinner) spinner.classList.remove("d_none");
     await loadDataApi();
     renderPkmCards();
 }
@@ -165,11 +161,9 @@ function prepDialogData(index) {
     let clickedSpecies = searchedDialogList === pkmArray ? searchedDialogList[index + 1] : null;
     let pkmTypesHtml = getPokemonTypesHtml(clickedPkm);
     let genusText = clickedSpecies ? getEngGenus(clickedSpecies) : "Unknown";
-
     let abilitiesHtml = getPkmAbilitiesHtml(clickedPkm);
     let catchRate = clickedSpecies ? clickedSpecies.cpature_rate : "Unknown";
     let baseExp = clickedPkm.base_experience || "Unknown";
-
     return { clickedPkm, pkmTypesHtml, genusText, abilitiesHtml, catchRate, baseExp };
 }
 
@@ -192,7 +186,6 @@ function getEngGenus(species) {
 
 function getPokemonStatsHtml(clickedPkm) {
     let statsRowsHtml = "";
-
     for (let i = 0; i < clickedPkm.stats.length; i++) {
         let s = clickedPkm.stats[i];
         let percent = (s.base_stat / 255) * 100;
@@ -203,7 +196,6 @@ function getPokemonStatsHtml(clickedPkm) {
 
 async function fetchEvoChain(clickedPkm) {
     const speciesUrl = clickedPkm.species.url;
-
     let speciesResponse = await fetch(speciesUrl);
     let speciesJson = await speciesResponse.json();
     let evoResponse = await fetch(speciesJson.evolution_chain.url);
@@ -217,7 +209,6 @@ async function fetchEvoImages(evoNameList) {
         let name = evoNameList[i];
         let response = await fetch(baseUrl + "pokemon/" + name);
         let pkmJson = await response.json();
-
         evoDataList.push({
             name: name,
             image: pkmJson.sprites.other["official-artwork"]["front_shiny"],
@@ -229,11 +220,9 @@ async function fetchEvoImages(evoNameList) {
 async function getPkmEvoHtml(clickedPkm) {
     let evoHtml = "";
     let evoStep = await fetchEvoChain(clickedPkm);
-
     let p1 = evoStep ? evoStep.species.name : null;
     let p2 = evoStep?.evolves_to?.[0] ? evoStep.evolves_to[0].species.name : null;
     let p3 = evoStep?.evolves_to?.[0]?.evolves_to?.[0] ? evoStep.evolves_to[0].evolves_to[0].species.name : null;
-
     let evoNameList = [p1, p2, p3].filter((name) => name != null);
     let evoObjectList = await fetchEvoImages(evoNameList);
     for (let i = 0; i < evoObjectList.length; i++) {
@@ -246,13 +235,11 @@ async function getPkmEvoHtml(clickedPkm) {
 function openDialog(index, pkmBgColor) {
     dialogPkmCardsRef.innerHTML = "";
     const { clickedPkm, pkmTypesHtml, genusText, abilitiesHtml, catchRate, baseExp } = prepDialogData(index);
-
     if (!pkmBgColor) {
         const pkmType = clickedPkm.types[0].type.name;
         pkmBgColor = typeColors[pkmType] || "#777";
     }
     dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, abilities, catchRate, baseExp);
-
     dialogPkmCardsRef.showModal();
     dialogPkmCardsRef.classList.add("active");
 }
@@ -265,13 +252,11 @@ function closeDialog() {
 function changeDialogPkm(currentIndex, direction) {
     let newIndex = currentIndex;
     let step = searchedDialogList === pkmArray ? 2 : 1;
-
     if (direction === "next") {
         newIndex += step;
     } else if (direction === "prev") {
         newIndex -= step;
     }
-
     if (newIndex < 0) {
         newIndex = searchedDialogList.length - step;
     } else if (newIndex >= searchedDialogList.length) {

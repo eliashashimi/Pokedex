@@ -28,11 +28,11 @@ function openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, 
     return /*html*/ `
         <section id="overlay-dialog-name" class="overlay-dialog-name" onclick="event.stopPropagation()" style="background-color: ${pkmBgColor}">
             <button id="exit-btn"  onclick="closeDialog()"><img src="./assets/icons/arrow-left.svg" alt=""></button>
-            <div>
+            <div class="dialog-head">
                 <h3>${clickedPkm.name.toUpperCase()}</h3>
                 <p>#${clickedPkm.id}</p>
             </div>
-            <div>
+            <div class="pkm-types">
                 ${pkmTypesHtml.toUpperCase()}
             </div>
             <div>
@@ -47,7 +47,7 @@ function openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, 
             <div class="tab-content-container" id="tab-content">
                 ${renderAboutTabTemp(clickedPkm, genusText, abilitiesHtml, catchRate, baseExp)}
             </div>
-            <div>
+            <div class="dialog-navigation">
                 <button class="prev btn" id="prev-button" onclick="changeDialogPkm(${index}, 'prev')">prev</button>
                 <button class="next btn" id="next-button" onclick="changeDialogPkm(${index}, 'next')">next</button>
             </div>            
@@ -129,7 +129,7 @@ function renderEvoRowTemp(evoName, evoImage) {
 
 function renderShinyTabTemp(clickedPkm) {
     return /*html*/ `
-        <div class="tab-category">
+        <div class="tab-category shiny">
             <img src="${clickedPkm.sprites.other["showdown"].front_shiny}" alt="${clickedPkm.name}">
         </div>
     `;
