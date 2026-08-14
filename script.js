@@ -17,10 +17,7 @@ async function init() {
     renderPkmCards();
 }
 
-function resetSearchList() {
-    searchedDialogList = [];
-}
-
+//#region fetch from API
 async function loadDataApi() {
     let start = saveMorePkm + 1;
     let end = loadMorePkm + saveMorePkm;
@@ -45,6 +42,63 @@ async function fetchAllPkm() {
     return allPkm;
 }
 
+async function loadSearchDetails(foundPkm) {
+    pkmCardsRef.innerHTML = "";
+    for (let i = 0; i < foundPkm.length; i++) {
+        let pkm = foundPkm[i];
+        const urlParts = pkm.url.split("/");
+        const pkmId = urlParts[urlParts.length - 2];
+        let detailResponse = await fetch(baseUrl + "pokemon/" + pkmId);
+        let onePkm = await detailResponse.json();
+        const pkmType = onePkm.types[0].type.name;
+        const pkmBgColor = typeColors[pkmType] || "#777";
+        searchedDialogList.push(onePkm);
+        let pkmtypes = getCardTypesHtml(onePkm);
+        let pkmIcons = getPkmIconsHtml(onePkm);
+        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i, pkmIcons);
+    }
+}
+
+async function fetchEvoChain(clickedPkm) {
+    const speciesUrl = clickedPkm.species.url;
+    let speciesResponse = await fetch(speciesUrl);
+    let speciesJson = await speciesResponse.json();
+    let evoResponse = await fetch(speciesJson.evolution_chain.url);
+    let evoJson = await evoResponse.json();
+    return evoJson.chain;
+}
+
+async function fetchEvoImages(evoNameList) {
+    evoDataList = [];
+    for (let i = 0; i < evoNameList.length; i++) {
+        let name = evoNameList[i];
+        let response = await fetch(baseUrl + "pokemon/" + name);
+        let pkmJson = await response.json();
+        evoDataList.push({
+            name: name,
+            image: pkmJson.sprites.other["official-artwork"]["front_shiny"],
+        });
+    }
+    return evoDataList;
+}
+
+async function getPkmEvoHtml(clickedPkm) {
+    let evoHtml = "";
+    let evoStep = await fetchEvoChain(clickedPkm);
+    let p1 = evoStep ? evoStep.species.name : null;
+    let p2 = evoStep?.evolves_to?.[0] ? evoStep.evolves_to[0].species.name : null;
+    let p3 = evoStep?.evolves_to?.[0]?.evolves_to?.[0] ? evoStep.evolves_to[0].evolves_to[0].species.name : null;
+    let evoNameList = [p1, p2, p3].filter((name) => name != null);
+    let evoObjectList = await fetchEvoImages(evoNameList);
+    for (let i = 0; i < evoObjectList.length; i++) {
+        let pkm = evoObjectList[i];
+        evoHtml += renderEvoRowTemp(pkm.name, pkm.image);
+    }
+    return renderEvoTemp(evoHtml);
+}
+//#endregion
+
+//#region input search area
 function filterPkm(list, searchVal) {
     return list.filter((pkm) => {
         const matchesName = pkm.name.toLowerCase().includes(searchVal);
@@ -69,6 +123,10 @@ async function inpSearchPkm() {
     loadSearchDetails(foundPkm);
 }
 
+function resetSearchList() {
+    searchedDialogList = [];
+}
+
 function checkEmptySearch() {
     const searchVal = document.getElementById("search-input").value.trim();
     if (searchVal === "") {
@@ -76,33 +134,88 @@ function checkEmptySearch() {
         renderPkmCards();
     }
 }
+//#endregion
 
-function getGlobaleIndex(onePkm) {
-    let IndexResult = pkmArray.findIndex((p) => p && p.id === onePkm.id);
-    return IndexResult !== -1 ? IndexResult : 0;
-}
-
-async function loadSearchDetails(foundPkm) {
+//#region render functions
+async function renderPkmCards() {
     pkmCardsRef.innerHTML = "";
-    for (let i = 0; i < foundPkm.length; i++) {
-        let pkm = foundPkm[i];
-        const urlParts = pkm.url.split("/");
-        const pkmId = urlParts[urlParts.length - 2];
-        let detailResponse = await fetch(baseUrl + "pokemon/" + pkmId);
-        let onePkm = await detailResponse.json();
+    for (let i = 0; i < pkmArray.length; i += 2) {
+        let onePkm = pkmArray[i];
         const pkmType = onePkm.types[0].type.name;
         const pkmBgColor = typeColors[pkmType] || "#777";
-        searchedDialogList.push(onePkm);
-        let pkmtypes = getCardTypesHtml(onePkm);
+        let pkmTypes = getCardTypesHtml(onePkm);
         let pkmIcons = getPkmIconsHtml(onePkm);
-        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i, pkmIcons);
+        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmTypes, i, pkmIcons);
     }
+    searchedDialogList = pkmArray;
+    const spinner = document.getElementById("loading-spinner");
+    if (spinner) spinner.style.display = "none";
 }
 
 function renderSpecies(pkmJsonSpecies) {
     const result = pkmJsonSpecies.genera.filter((item) => item.language.name === "en");
     if (result) {
         return result.genus;
+    }
+}
+//#endregion
+
+//#region Dialog function and helper
+function openDialog(index, pkmBgColor) {
+    dialogPkmCardsRef.innerHTML = "";
+    const { clickedPkm, pkmTypesHtml, genusText, abilitiesHtml, catchRate, baseExp } = prepDialogData(index);
+    if (!pkmBgColor) {
+        const pkmType = clickedPkm.types[0].type.name;
+        pkmBgColor = typeColors[pkmType] || "#777";
+    }
+    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, abilities, catchRate, baseExp);
+    dialogPkmCardsRef.showModal();
+    dialogPkmCardsRef.classList.add("active");
+}
+
+function changeDialogPkm(currentIndex, direction) {
+    let newIndex = currentIndex;
+    let step = searchedDialogList === pkmArray ? 2 : 1;
+    if (direction === "next") {
+        newIndex += step;
+    } else if (direction === "prev") {
+        newIndex -= step;
+    }
+    if (newIndex < 0) {
+        newIndex = searchedDialogList.length - step;
+    } else if (newIndex >= searchedDialogList.length) {
+        newIndex = 0;
+    }
+    openDialog(newIndex);
+}
+
+function closeDialog() {
+    dialogPkmCardsRef.close();
+    dialogPkmCardsRef.classList.remove("active");
+}
+
+function updateActiveBtn(tabName) {
+    const button = document.querySelectorAll(".tab-btn");
+    for (let btn of button) {
+        btn.classList.remove("active");
+    }
+    const activeBtn = document.getElementById("tab-" + tabName);
+    if (activeBtn) activeBtn.classList.add("active");
+}
+
+async function switchTab(tabName, index) {
+    updateActiveBtn(tabName);
+    const tabContentRef = document.getElementById("tab-content");
+    let clickedPkm = searchedDialogList[index];
+    const { genusText, abilities, catchRate, baseExp } = prepDialogData(index);
+    if (tabName === "about") {
+        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText, abilities, catchRate, baseExp);
+    } else if (tabName === "stats") {
+        tabContentRef.innerHTML = getPokemonStatsHtml(clickedPkm);
+    } else if (tabName === "evolution") {
+        tabContentRef.innerHTML = await getPkmEvoHtml(clickedPkm);
+    } else if (tabName === "shiny") {
+        tabContentRef.innerHTML = renderShinyTabTemp(clickedPkm);
     }
 }
 
@@ -124,28 +237,6 @@ function getCardTypesHtml(onePkm) {
         pkmTypes += renderPkmTypeTemp(currentType, currentTypeColor);
     }
     return pkmTypes;
-}
-
-async function renderPkmCards() {
-    pkmCardsRef.innerHTML = "";
-    for (let i = 0; i < pkmArray.length; i += 2) {
-        let onePkm = pkmArray[i];
-        const pkmType = onePkm.types[0].type.name;
-        const pkmBgColor = typeColors[pkmType] || "#777";
-        let pkmTypes = getCardTypesHtml(onePkm);
-        let pkmIcons = getPkmIconsHtml(onePkm);
-        pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmTypes, i, pkmIcons);
-    }
-    searchedDialogList = pkmArray;
-    const spinner = document.getElementById("loading-spinner");
-    if (spinner) spinner.style.display = "none";
-}
-
-async function loadMorePkmBtn() {
-    const spinner = document.getElementById("loading-spinner");
-    await loadDataApi();
-    if (spinner) spinner.style.display = "flex";
-    renderPkmCards();
 }
 
 function getPkmAbilitiesHtml(pkm) {
@@ -193,99 +284,11 @@ function getPokemonStatsHtml(clickedPkm) {
     }
     return renderStatsTemp(statsRowsHtml);
 }
+//#endregion
 
-async function fetchEvoChain(clickedPkm) {
-    const speciesUrl = clickedPkm.species.url;
-    let speciesResponse = await fetch(speciesUrl);
-    let speciesJson = await speciesResponse.json();
-    let evoResponse = await fetch(speciesJson.evolution_chain.url);
-    let evoJson = await evoResponse.json();
-    return evoJson.chain;
-}
-
-async function fetchEvoImages(evoNameList) {
-    evoDataList = [];
-    for (let i = 0; i < evoNameList.length; i++) {
-        let name = evoNameList[i];
-        let response = await fetch(baseUrl + "pokemon/" + name);
-        let pkmJson = await response.json();
-        evoDataList.push({
-            name: name,
-            image: pkmJson.sprites.other["official-artwork"]["front_shiny"],
-        });
-    }
-    return evoDataList;
-}
-
-async function getPkmEvoHtml(clickedPkm) {
-    let evoHtml = "";
-    let evoStep = await fetchEvoChain(clickedPkm);
-    let p1 = evoStep ? evoStep.species.name : null;
-    let p2 = evoStep?.evolves_to?.[0] ? evoStep.evolves_to[0].species.name : null;
-    let p3 = evoStep?.evolves_to?.[0]?.evolves_to?.[0] ? evoStep.evolves_to[0].evolves_to[0].species.name : null;
-    let evoNameList = [p1, p2, p3].filter((name) => name != null);
-    let evoObjectList = await fetchEvoImages(evoNameList);
-    for (let i = 0; i < evoObjectList.length; i++) {
-        let pkm = evoObjectList[i];
-        evoHtml += renderEvoRowTemp(pkm.name, pkm.image);
-    }
-    return renderEvoTemp(evoHtml);
-}
-
-function openDialog(index, pkmBgColor) {
-    dialogPkmCardsRef.innerHTML = "";
-    const { clickedPkm, pkmTypesHtml, genusText, abilitiesHtml, catchRate, baseExp } = prepDialogData(index);
-    if (!pkmBgColor) {
-        const pkmType = clickedPkm.types[0].type.name;
-        pkmBgColor = typeColors[pkmType] || "#777";
-    }
-    dialogPkmCardsRef.innerHTML = openDialogTemp(clickedPkm, pkmTypesHtml, genusText, index, pkmBgColor, abilities, catchRate, baseExp);
-    dialogPkmCardsRef.showModal();
-    dialogPkmCardsRef.classList.add("active");
-}
-
-function closeDialog() {
-    dialogPkmCardsRef.close();
-    dialogPkmCardsRef.classList.remove("active");
-}
-
-function changeDialogPkm(currentIndex, direction) {
-    let newIndex = currentIndex;
-    let step = searchedDialogList === pkmArray ? 2 : 1;
-    if (direction === "next") {
-        newIndex += step;
-    } else if (direction === "prev") {
-        newIndex -= step;
-    }
-    if (newIndex < 0) {
-        newIndex = searchedDialogList.length - step;
-    } else if (newIndex >= searchedDialogList.length) {
-        newIndex = 0;
-    }
-    openDialog(newIndex);
-}
-
-function updateActiveBtn(tabName) {
-    const button = document.querySelectorAll(".tab-btn");
-    for (let btn of button) {
-        btn.classList.remove("active");
-    }
-    const activeBtn = document.getElementById("tab-" + tabName);
-    if (activeBtn) activeBtn.classList.add("active");
-}
-
-async function switchTab(tabName, index) {
-    updateActiveBtn(tabName);
-    const tabContentRef = document.getElementById("tab-content");
-    let clickedPkm = searchedDialogList[index];
-    const { genusText, abilities, catchRate, baseExp } = prepDialogData(index);
-    if (tabName === "about") {
-        tabContentRef.innerHTML = renderAboutTabTemp(clickedPkm, genusText, abilities, catchRate, baseExp);
-    } else if (tabName === "stats") {
-        tabContentRef.innerHTML = getPokemonStatsHtml(clickedPkm);
-    } else if (tabName === "evolution") {
-        tabContentRef.innerHTML = await getPkmEvoHtml(clickedPkm);
-    } else if (tabName === "shiny") {
-        tabContentRef.innerHTML = renderShinyTabTemp(clickedPkm);
-    }
+async function loadMorePkmBtn() {
+    const spinner = document.getElementById("loading-spinner");
+    await loadDataApi();
+    if (spinner) spinner.style.display = "flex";
+    renderPkmCards();
 }
