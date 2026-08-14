@@ -11,7 +11,7 @@ let saveMorePkm = 0;
 
 async function init() {
     const spinner = document.getElementById("loading-spinner");
-    if (spinner) spinner.classList.remove("d_none");
+    if (spinner) spinner.style.display = "flex";
     await loadDataApi();
     await new Promise((resolve) => setTimeout(resolve, 1000));
     renderPkmCards();
@@ -92,9 +92,9 @@ async function loadSearchDetails(foundPkm) {
         let onePkm = await detailResponse.json();
         const pkmType = onePkm.types[0].type.name;
         const pkmBgColor = typeColors[pkmType] || "#777";
+        searchedDialogList.push(onePkm);
         let pkmtypes = getCardTypesHtml(onePkm);
         let pkmIcons = getPkmIconsHtml(onePkm);
-        searchedDialogList.push(onePkm);
         pkmCardsRef.innerHTML += renderPkmCardTemp(onePkm, pkmBgColor, pkmtypes, i, pkmIcons);
     }
 }
@@ -138,13 +138,13 @@ async function renderPkmCards() {
     }
     searchedDialogList = pkmArray;
     const spinner = document.getElementById("loading-spinner");
-    if (spinner) spinner.classList.remove("d_none");
+    if (spinner) spinner.style.display = "none";
 }
 
 async function loadMorePkmBtn() {
     const spinner = document.getElementById("loading-spinner");
-    if (spinner) spinner.classList.remove("d_none");
     await loadDataApi();
+    if (spinner) spinner.style.display = "flex";
     renderPkmCards();
 }
 
